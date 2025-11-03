@@ -11,13 +11,15 @@
 #define   TASK_STACKSIZE       2048
 OS_STK    task1_stk[TASK_STACKSIZE];
 OS_STK    task2_stk[TASK_STACKSIZE];
+OS_STK    task_key_stk[TASK_STACKSIZE];
 
 #define TASK1_PRIORITY 2
 #define TASK2_PRIORITY 3
+#define TASK_KEY_PRIORITY 4
 
-// Task
 void Task1_StartGame(void* pdata);
 void Task2_GuessNumber(void* pdata);
+void Read_Key(void* pdata);
 
 // Variables partagées
 volatile INT8U key_value = 3;
@@ -30,8 +32,26 @@ INT8U err;
 OS_EVENT *KeyPressSem;
 OS_EVENT *GameStartSem;
 
+void Read_Key(void* pdata){
+    while (1)
+    {
+        do {
+            key_value = IORD_ALTERA_AVALON_PIO_DATA(KEY_BASE);
+            OSTimeDlyHMSM(0, 0, 0, 10);
+        } while (key_value == 3);
+        
+        if (key_value == 2 && !game_active)
+        {
+            OSSemPost(KeyPressSem);
+        }
+        
+        do {
+            OSTimeDlyHMSM(0, 0, 0, 50);
+        } while (IORD_ALTERA_AVALON_PIO_DATA(KEY_BASE) != 3);
+    }
+}
+
 void Task1_StartGame(void* pdata){
-    printf("\n========== JEU DE DEVINETTE ==========\n");
     printf("Voulez-vous commencer une nouvelle partie ?\n");
     printf("Appuyez sur KEY[0] pour commencer\n\n");
     
@@ -39,19 +59,16 @@ void Task1_StartGame(void* pdata){
     {
         OSSemPend(KeyPressSem, 0, &err);
         
-        if (key_value == 2)
-        {
-            printf("\n==> Nouvelle partie commencée!\n");
-            
-            srand(OSTimeGet());
-            secret_number = rand() % 1001;
-            printf("Un nombre secret entre 0 et 1000 a été généré...\n");
-            printf("Devinez le nombre en utilisant les switches!\n\n");
+        printf("\n==> Nouvelle partie commencée!\n");
+        
+        srand(OSTimeGet());
+        secret_number = rand() % 1001;
+        printf("Un nombre secret entre 0 et 1000 a été généré...\n");
+        printf("Devinez le nombre en utilisant les switches!\n\n");
 
-            game_active = 1;
-            
-            OSSemPost(GameStartSem);
-        }
+        game_active = 1;
+        
+        OSSemPost(GameStartSem);
     }
 }
 
@@ -124,6 +141,16 @@ int main(void){
     KeyPressSem = OSSemCreate(0);
     GameStartSem = OSSemCreate(0);
 
+    OSTaskCreateExt(Read_Key,
+                    NULL,
+                    (void *)&task_key_stk[TASK_STACKSIZE-1],
+                    TASK_KEY_PRIORITY,
+                    TASK_KEY_PRIORITY,
+                    task_key_stk,
+                    TASK_STACKSIZE,
+                    NULL,
+                    0);
+    
     OSTaskCreateExt(Task1_StartGame,
                     NULL,
                     (void *)&task1_stk[TASK_STACKSIZE-1],
@@ -143,7 +170,7 @@ int main(void){
                     TASK_STACKSIZE,
                     NULL,
                     0);
-                    
+
     OSStart();
     return 0;
 }
