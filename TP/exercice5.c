@@ -16,6 +16,7 @@ alt_u8 celsius_lookup(int adc_avg_in);
 OS_EVENT *S1;
 void Temp_Alarm(void* pdata);
 void read_temperature ( void *pdata );
+void Increment_Time( void* pdata );
 /* Definition of Task Stacks */
 #define   TASK_STACKSIZE       2048
 
@@ -68,13 +69,24 @@ void Temp_Alarm(void* pdata) {
 		IOWR_ALTERA_AVALON_PIO_DATA(LEDS_BASE, (0x0));
 	}
 }
+void Increment_Time( void* pdata ) {
+	unsigned int* seconds = (unsigned int*)pdata;
+    while (1)
+    {
+        sleep(1);
+        (*seconds)++;
+        printf("Temps écoulé : %u secondes\n", *seconds);
+    }
+}
 int main(void){
 	IOWR(MODULAR_ADC_0_SEQUENCER_CSR_BASE, 0, 0);
 	usleep(10);
 	IOWR(MODULAR_ADC_0_SAMPLE_STORE_CSR_BASE, 64, 0);
 	IOWR(MODULAR_ADC_0_SEQUENCER_CSR_BASE, 0, 1);
+	int32_t timer;
 	while (1)
 	{
+		Increment_Time(timer);
 		read_temperature(NULL);
 	}
 	
