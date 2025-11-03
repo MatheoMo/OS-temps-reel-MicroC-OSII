@@ -69,6 +69,10 @@ void Temp_Alarm(void* pdata) {
 	}
 }
 int main(void){
+	IOWR(MODULAR_ADC_0_SEQUENCER_CSR_BASE, 0, 0);
+	usleep(10);
+	IOWR(MODULAR_ADC_0_SAMPLE_STORE_CSR_BASE, 64, 0);
+	IOWR(MODULAR_ADC_0_SEQUENCER_CSR_BASE, 0, 1);
 	while (1)
 	{
 		read_temperature(NULL);
