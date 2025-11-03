@@ -9,23 +9,27 @@
 
 /* Definition of Task Stacks */
 #define   TASK_STACKSIZE       2048
+OS_STK    task_increment_stk[TASK_STACKSIZE];
 OS_STK    task1_stk[TASK_STACKSIZE];
 OS_STK    task2_stk[TASK_STACKSIZE];
 OS_STK    task_key_stk[TASK_STACKSIZE];
 
-#define TASK1_PRIORITY 2
-#define TASK2_PRIORITY 3
-#define TASK_KEY_PRIORITY 4
+#define TASK1_PRIORITY 3
+#define TASK2_PRIORITY 4
+#define TASK_INCREMENT_PRIORITY 2
+#define TASK_KEY_PRIORITY 5
 
 void Task1_StartGame(void* pdata);
 void Task2_GuessNumber(void* pdata);
 void Read_Key(void* pdata);
+void Increment_Time(void* pdata);
 
 // Variables partagées
 volatile INT8U key_value = 3;
 volatile INT16U sw_value = 0;
 volatile INT16U secret_number = 0;
 volatile INT8U game_active = 0;
+volatile INT32U timer_seconds = 0;
 INT8U err;
 
 // Sémaphores
@@ -111,7 +115,7 @@ void Task2_GuessNumber(void* pdata){
                 else
                 {
                     printf("\n\n Victoire ! \n");
-                    printf("Vous avez trouvé le nombre %d en %d tentatives!\n\n", secret_number, attempts);
+                    printf("Vous avez trouvé le nombre %d en %d tentatives et %d s !\n\n", secret_number, attempts, timer_seconds);
                     
                     for (int i = 0; i < 5; i++)
                     {
@@ -133,12 +137,29 @@ void Task2_GuessNumber(void* pdata){
         }
     }
 }
+void Increment_Time( void* pdata ) {
+    while (1)
+    {
+        OSTimeDlyHMSM(0, 0, 1, 0);
+        timer_seconds++;
+    }
+}
 
 int main(void){
     OSInit();
     
     KeyPressSem = OSSemCreate(0);
     GameStartSem = OSSemCreate(0);
+
+    OSTaskCreateExt(Increment_Time,
+                    NULL,
+                    (void *)&task_increment_stk[TASK_STACKSIZE-1],
+                    TASK_INCREMENT_PRIORITY,
+                    TASK_INCREMENT_PRIORITY,
+                    task_increment_stk,
+                    TASK_STACKSIZE,
+                    NULL,
+                    0);
 
     OSTaskCreateExt(Read_Key,
                     NULL,
