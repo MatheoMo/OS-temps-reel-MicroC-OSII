@@ -19,22 +19,30 @@ void startGame(void* pdata);
 
 // variavles partagées
 INT8U sw_value = 0;
-INT8U key_value = 0;
+volatile INT8U key_value = 3;
 
 void startGame(void* pdata){
-    INT8U last_key = 0;
+    INT8U last_key = 3;
+    INT8U first_time = 1;
     
     while (1)
     {
+        if (first_time)
+        {
+            printf("Voulez-vous commencer une nouvelle partie ? \n");
+            printf("KEY[0] = Nouvelle partie, KEY[1] = Continuer\n");
+            first_time = 0;
+        }
+        
         if (key_value != last_key && key_value != 3)
         {
-            if (key_value == 1)
+            if (key_value == 2)  // KEY[0] pressé
             {
-                printf("Nouvelle partie commencée!\n");
+                printf("\n==> Nouvelle partie commencée!\n\n");
             }
-            else if (key_value == 2)
+            else if (key_value == 1)  // KEY[1] pressé
             {
-                printf("Continuer la partie en cours.\n");
+                printf("\n==> Continuer la partie en cours.\n\n");
             }
             
             last_key = key_value;
@@ -79,7 +87,7 @@ int main(void){
                     TASK_STACKSIZE,
                     NULL,
                     0);
-    printf("Voulez-vous commencer une nouvelle partie ? ");
+    
     OSStart();
     return 0;
 }
