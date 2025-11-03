@@ -92,6 +92,7 @@ int main(void){
 	while (1)
 	{
 		Increment_Time(timer);
+		Display_Time(&timer);
 		read_temperature(NULL);
 	}
 	
