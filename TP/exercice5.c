@@ -52,8 +52,8 @@ void read_temperature ( void *pdata ){
 	{
 		adc_value += IORD(MODULAR_ADC_0_SAMPLE_STORE_CSR_BASE, i);
 	}
-	adc_value = adc_value / 64;
-	alt_u8 temperature = celsius_lookup(adc_value);
+	adc_value = adc_value / 64 - 3416;
+	alt_u8 temperature = celsius_lookup(adc_value) - 40;
 	printf("Temperature: %d C\n", temperature);
 }
 
