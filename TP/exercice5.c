@@ -63,6 +63,7 @@ void read_temperature ( void *pdata ){
     }
     adc_value = adc_value / 64 - 3416;
     alt_u8 temperature = celsius_lookup(adc_value) - 40;
+	*((alt_u8*)pdata) = temperature;
     printf("Temperature: %d C\n", temperature);
 }
 
@@ -121,7 +122,7 @@ int main(void){
                     NULL,
                     0);
     
-    OSTaskCreateExt(Display_Time,
+    OSTaskCreateExt(Display_Temperature,
                     NULL,
                     (void *)&task_display_stk[TASK_STACKSIZE-1],
                     TASK_DISPLAY_PRIORITY,
