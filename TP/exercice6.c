@@ -116,8 +116,10 @@ void Task2_GuessNumber(void* pdata){
                 }
                 else
                 {
+                    best_time = (best_time == 0 || timer_seconds < best_time) ? timer_seconds : best_time;
                     printf("\n\n Victoire ! \n");
                     printf("Vous avez trouvé le nombre %d en %d tentatives et %d s !\n\n", secret_number, attempts, timer_seconds);
+                    printf("Meilleur temps: %d s\n\n", best_time);
                     
                     for (int i = 0; i < 5; i++)
                     {
@@ -129,7 +131,7 @@ void Task2_GuessNumber(void* pdata){
                     
                     game_active = 0;
                     printf("Appuyez sur KEY[0] pour une nouvelle partie.\n\n");
-                    best_time = (best_time == 0 || timer_seconds < best_time) ? timer_seconds : best_time;
+                    
                     attempts = 0;
                     OSSemPost(KeyPressSem);
                     timer_seconds = 0;  
