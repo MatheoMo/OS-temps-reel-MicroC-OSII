@@ -85,8 +85,6 @@ void Task2_GuessNumber(void* pdata){
         
         while (game_active)
         {
-            sw_value = IORD_ALTERA_AVALON_PIO_DATA(SW_BASE) & 0x3FF;
-            
             do {
                 key_value = IORD_ALTERA_AVALON_PIO_DATA(KEY_BASE);
                 OSTimeDlyHMSM(0, 0, 0, 10);
@@ -94,10 +92,11 @@ void Task2_GuessNumber(void* pdata){
             
             if (key_value == 2)
             {
+                sw_value = IORD_ALTERA_AVALON_PIO_DATA(SW_BASE) & 0x3FF;
                 user_guess = sw_value;
                 attempts++;
                 
-                printf("Tentative #%d : Vous proposez %d\n", attempts, user_guess);
+                printf("Tentative #%d : Vous avez proposez %d\n", attempts, user_guess);
                 
                 if (user_guess < secret_number)
                 {
