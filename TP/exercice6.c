@@ -13,42 +13,30 @@ OS_STK    task_game_stk[TASK_STACKSIZE];
 #define TASK_KEY_PRIORITY 2
 #define TASK_GAME_PRIORITY 3
 
-
 void Read_SW(void* pdata);
 void startGame(void* pdata);
 
-// variavles partagées
-INT8U sw_value = 0;
 volatile INT8U key_value = 3;
+INT8U err;
+
+OS_EVENT *KeyPressSem;
 
 void startGame(void* pdata){
-    INT8U last_key = 3;
-    INT8U first_time = 1;
+    printf("Voulez-vous commencer une nouvelle partie ? \n");
+    printf("KEY[0] = Nouvelle partie, KEY[1] = Continuer\n\n");
     
     while (1)
     {
-        if (first_time)
-        {
-            printf("Voulez-vous commencer une nouvelle partie ? \n");
-            printf("KEY[0] = Nouvelle partie, KEY[1] = Continuer\n");
-            first_time = 0;
-        }
+        OSSemPend(KeyPressSem, 0, &err);
         
-        if (key_value != last_key && key_value != 3)
+        if (key_value == 2)  // KEY[0] pressé
         {
-            if (key_value == 2)  // KEY[0] pressé
-            {
-                printf("\n==> Nouvelle partie commencée!\n\n");
-            }
-            else if (key_value == 1)  // KEY[1] pressé
-            {
-                printf("\n==> Continuer la partie en cours.\n\n");
-            }
-            
-            last_key = key_value;
+            printf("\n==> Nouvelle partie commencée!\n\n");
         }
-        
-        OSTimeDlyHMSM(0, 0, 0, 100);
+        else if (key_value == 1)  // KEY[1] pressé
+        {
+            printf("\n==> Continuer la partie en cours.\n\n");
+        }
     }
 }
 
@@ -57,9 +45,12 @@ void Read_Key(void* pdata){
     {
         do {
             key_value = IORD_ALTERA_AVALON_PIO_DATA(KEY_BASE);
+            OSTimeDlyHMSM(0, 0, 0, 10);
         } while (key_value == 3);
         
         printf("Bouton pressé: KEY[%d]\n", key_value);
+        
+        OSSemPost(KeyPressSem);
         
         do {
             OSTimeDlyHMSM(0, 0, 0, 50);
@@ -69,6 +60,9 @@ void Read_Key(void* pdata){
 
 int main(void){
     OSInit();
+    
+    KeyPressSem = OSSemCreate(0);
+    
     OSTaskCreateExt(Read_Key,
                     NULL,
                     (void *)&task_key_stk[TASK_STACKSIZE-1],
