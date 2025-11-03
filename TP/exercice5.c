@@ -6,13 +6,18 @@
 #include "altera_avalon_pio_regs.h"
 #include "altera_modular_adc_sequencer_regs.h"
 
-#define TEMP_THRESHOLD 21
-alt_u8 celsius_lookup(int adc_avg_in); //enregistrer les temperatures dans une grande table
-void read_temperature ( void *pdata ) ;
 /* Definition of Task Stacks */
 #define   TASK_STACKSIZE       2048
-
-
+OS_STK    task1_stk[TASK_STACKSIZE];
+#define TEMP_THRESHOLD 21
+#define TASK1_PRIORITY 1
+INT8U err;
+alt_u8 celsius_lookup(int adc_avg_in);
+OS_EVENT *S1;
+void Temp_Alarm(void* pdata);
+void read_temperature ( void *pdata );
+/* Definition of Task Stacks */
+#define   TASK_STACKSIZE       2048
 
 
 alt_u8 celsius_lookup(int adc_avg_in)
@@ -51,4 +56,24 @@ void read_temperature ( void *pdata ){
 	adc_value = adc_value / 64;
 	alt_u8 temperature = celsius_lookup(adc_value);
 	printf("Temperature: %d C\n", temperature);
+}
+void Temp_Alarm(void* pdata) {
+	alt_u8 temperature;
+	read_temperature(temperature);
+	if (temperature > TEMP_THRESHOLD) {
+		IOWR_ALTERA_AVALON_PIO_DATA(LEDS_BASE, (0x1));
+		printf("! Temperature exceeded threshold: %d C !\n", temperature);
+	}
+	else {
+		IOWR_ALTERA_AVALON_PIO_DATA(LEDS_BASE, (0x0));
+	}
+}
+int main(void){
+	while (1)
+	{
+		Temp_Alarm(NULL);
+		OSTimeDlyHMSM(0, 0, 1, 0); // Delay of 1 second
+	}
+	
+	return 0;
 }
