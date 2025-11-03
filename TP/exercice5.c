@@ -47,16 +47,16 @@ alt_u8 celsius_lookup(int adc_avg_in)
 }
 
 void read_temperature ( void *pdata ){
-	int adc_value;
+	int adc_value = 0;
 	for (int i = 0; i < 64; i++)
 	{
-		adc_value=IORD(MODULAR_ADC_0_SAMPLE_STORE_CSR_BASE, i );
-		adc_value = +adc_value;
+		adc_value += IORD(MODULAR_ADC_0_SAMPLE_STORE_CSR_BASE, i);
 	}
 	adc_value = adc_value / 64;
 	alt_u8 temperature = celsius_lookup(adc_value);
 	printf("Temperature: %d C\n", temperature);
 }
+
 void Temp_Alarm(void* pdata) {
 	alt_u8 temperature;
 	read_temperature(temperature);
