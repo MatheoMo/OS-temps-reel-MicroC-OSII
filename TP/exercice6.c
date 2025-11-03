@@ -131,7 +131,7 @@ void Task2_GuessNumber(void* pdata){
                     
                     game_active = 0;
                     printf("Appuyez sur KEY[0] pour une nouvelle partie.\n\n");
-                    
+                    OSTimeDlyHMSM(0, 0, 1, 0);
                     attempts = 0;
                     OSSemPost(KeyPressSem);
                     timer_seconds = 0;  
