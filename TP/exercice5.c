@@ -23,23 +23,11 @@ void Temp_Alarm(void* pdata);
 void read_temperature ( void *pdata );
 void Increment_Time( void* pdata );
 void Display_Time(void* pdata);
+void Display_Temperature (void* pdata);
 
 // Variable partagée pour le timer
 volatile INT32U timer_seconds = 0;
-
-// Table de conversion pour affichage 7 segments (0-9)
-const alt_u8 seven_seg_table[10] = {
-    0x3F, // 0
-    0x06, // 1
-    0x5B, // 2
-    0x4F, // 3
-    0x66, // 4
-    0x6D, // 5
-    0x7D, // 6
-    0x07, // 7
-    0x7F, // 8
-    0x6F  // 9
-};
+volatile INT32U temp_thread = 0;
 
 alt_u8 celsius_lookup(int adc_avg_in)
 {
@@ -102,13 +90,17 @@ void Increment_Time( void* pdata ) {
 void Display_Time(void* pdata){
     while (1)
     {
-        INT32U seconds = timer_seconds % 10;
-        alt_u8 display_value = seven_seg_table[seconds];
-        
-        IOWR_ALTERA_AVALON_PIO_DATA(SEVEN_SEG_0_BASE, display_value);
-        
+        IOWR_ALTERA_AVALON_PIO_DATA(SEVEN_SEG_0_BASE, timer_seconds);
         OSTimeDlyHMSM(0, 0, 0, 100);
     }
+}
+void Display_Temperature (void* pdata){
+	while (1)
+	{
+		read_temperature(temp_thread);
+		IOWR_ALTERA_AVALON_PIO_DATA(SEVEN_SEG_0_BASE, temp_thread);
+		OSTimeDlyHMSM(0, 0, 5, 0);
+	}
 }
 
 int main(void){
