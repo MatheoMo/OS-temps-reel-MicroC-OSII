@@ -17,7 +17,7 @@ OS_STK	  task_sw_stk[TASK_STACKSIZE];
 #define TASK_INCREMENT_PRIORITY 3
 #define TASK_DISPLAY_TIME_PRIORITY 4
 #define TASK_DISPLAY_TEMP_PRIORITY 5
-#define TASK_SW_PRIORITY 2
+#define TASK_SW_PRIORITY 6
 
 INT8U err;
 alt_u8 celsius_lookup(int adc_avg_in);
@@ -32,10 +32,6 @@ void Read_SW(void* pdata);
 volatile INT32U timer_seconds = 0;
 volatile INT32U temp_thread = 0;
 volatile INT8U display_mode = 0;
-
-// contrôler de l'affichage
-OS_EVENT *DisplayTimeSem;
-OS_EVENT *DisplayTempSem;
 
 alt_u8 celsius_lookup(int adc_avg_in)
 {
@@ -98,26 +94,22 @@ void Increment_Time( void* pdata ) {
 void Display_Time(void* pdata){
     while (1)
     {
-        OSSemPend(DisplayTimeSem, 0, &err);
-
-        while (display_mode == 0)
+        if (display_mode == 0)
         {
             IOWR_ALTERA_AVALON_PIO_DATA(SEVEN_SEG_0_BASE, timer_seconds);
-            OSTimeDlyHMSM(0, 0, 0, 100);
         }
+        OSTimeDlyHMSM(0, 0, 0, 100);
     }
 }
 void Display_Temperature (void* pdata){
     while (1)
     {
-        OSSemPend(DisplayTempSem, 0, &err);
-        
-        while (display_mode == 1)
+        if (display_mode == 1)
         {
             read_temperature(temp_thread);
             IOWR_ALTERA_AVALON_PIO_DATA(SEVEN_SEG_0_BASE, temp_thread);
-            OSTimeDlyHMSM(0, 0, 1, 0);
         }
+        OSTimeDlyHMSM(0, 0, 1, 0);
     }
 }
 void Read_SW(void* pdata){
@@ -135,18 +127,16 @@ void Read_SW(void* pdata){
             if (display_mode == 0)
             {
                 printf("Mode: TIME\n");
-                OSSemPost(DisplayTimeSem);
             }
             else
             {
                 printf("Mode: TEMPERATURE\n");
-                OSSemPost(DisplayTempSem);
             }
             
             previous_mode = new_mode;
         }
         
-        OSTimeDlyHMSM(0, 0, 0, 100);
+        OSTimeDlyHMSM(0, 0, 0, 200);
     }
 }
 
@@ -157,9 +147,6 @@ int main(void){
     IOWR(MODULAR_ADC_0_SEQUENCER_CSR_BASE, 0, 1);
     
     OSInit();
-    
-    DisplayTimeSem = OSSemCreate(1);
-    DisplayTempSem = OSSemCreate(0);
     
     OSTaskCreateExt(Increment_Time,
                     NULL,
