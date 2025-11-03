@@ -11,11 +11,13 @@
 OS_STK    task_increment_stk[TASK_STACKSIZE];
 OS_STK    task_display_stk[TASK_STACKSIZE];
 OS_STK    task_temp_stk[TASK_STACKSIZE];
+OS_STK	  task_sw_stk[TASK_STACKSIZE];
 
 #define TEMP_THRESHOLD 21
 #define TASK_INCREMENT_PRIORITY 3
 #define TASK_DISPLAY_PRIORITY 4
 #define TASK_TEMP_PRIORITY 5
+#define TASK_SW_PRIORITY 6
 
 INT8U err;
 alt_u8 celsius_lookup(int adc_avg_in);
@@ -24,10 +26,12 @@ void read_temperature ( void *pdata );
 void Increment_Time( void* pdata );
 void Display_Time(void* pdata);
 void Display_Temperature (void* pdata);
+void Read_SW(void* pdata);
 
 // Variable partagée pour le timer
 volatile INT32U timer_seconds = 0;
 volatile INT32U temp_thread = 0;
+int sw_value;
 
 alt_u8 celsius_lookup(int adc_avg_in)
 {
@@ -103,6 +107,14 @@ void Display_Temperature (void* pdata){
 		OSTimeDlyHMSM(0, 0, 5, 0);
 	}
 }
+void Read_SW(void* pdata){
+	while (1)
+	{
+		sw_value = IORD_ALTERA_AVALON_PIO_DATA(SW_BASE);
+		printf("Switches state: 0x%02X\n", sw_value);
+		OSTimeDlyHMSM(0, 0, 1, 0);
+	}
+}
 
 int main(void){
     IOWR(MODULAR_ADC_0_SEQUENCER_CSR_BASE, 0, 0);
@@ -131,6 +143,15 @@ int main(void){
                     TASK_STACKSIZE,
                     NULL,
                     0);
+	OSTaskCreateExt(Read_SW,
+					NULL,
+					(void *)&task_sw_stk[TASK_STACKSIZE-1],
+					TASK_SW_PRIORITY,
+					TASK_SW_PRIORITY,
+					task_sw_stk,
+					TASK_STACKSIZE,
+					NULL,
+					0);
     OSStart();
     
     return 0;
