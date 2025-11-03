@@ -18,8 +18,15 @@ INT8U key_value = 0;
 void Read_Key(void* pdata){
     while (1)
     {
-        INT8U key_value = IORD_ALTERA_AVALON_PIO_DATA(KEY_BASE);
-        OSTimeDlyHMSM(0, 0, 0, 100);
+        do {
+            key_value = IORD_ALTERA_AVALON_PIO_DATA(KEY_BASE);
+        } while (key_value == 2);
+        
+        printf("Bouton pressé: KEY[%d]\n", key_value);
+        
+        do {
+            OSTimeDlyHMSM(0, 0, 0, 50);
+        } while (IORD_ALTERA_AVALON_PIO_DATA(KEY_BASE) != 0);
     }
 }
 int main(void){
