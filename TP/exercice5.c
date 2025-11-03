@@ -70,12 +70,12 @@ void Temp_Alarm(void* pdata) {
 	}
 }
 void Increment_Time( void* pdata ) {
-	unsigned int* seconds = (unsigned int*)pdata;
+	int seconds = pdata;
     while (1)
     {
-        sleep(1);
-        (*seconds)++;
-        printf("Temps écoulé : %u secondes\n", *seconds);
+        usleep(1000000);
+        (seconds)++;
+        printf("Temps écoulé : %u secondes\n", seconds);
     }
 }
 int main(void){
