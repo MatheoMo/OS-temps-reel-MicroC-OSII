@@ -30,6 +30,7 @@ volatile INT16U sw_value = 0;
 volatile INT16U secret_number = 0;
 volatile INT8U game_active = 0;
 volatile INT32U timer_seconds = 0;
+volatile INT32U best_time = 0;
 INT8U err;
 
 // Sémaphores
@@ -85,8 +86,9 @@ void Task2_GuessNumber(void* pdata){
         OSSemPend(GameStartSem, 0, &err);
         
         attempts = 0;
+
         printf("\nDébut du jeu\n");
-        
+        OSTimeDlyHMSM(0, 0, 1, 0);
         while (game_active)
         {
             do {
@@ -127,7 +129,10 @@ void Task2_GuessNumber(void* pdata){
                     
                     game_active = 0;
                     printf("Appuyez sur KEY[0] pour une nouvelle partie.\n\n");
+                    best_time = (best_time == 0 || timer_seconds < best_time) ? timer_seconds : best_time;
+                    attempts = 0;
                     OSSemPost(KeyPressSem);
+                    timer_seconds = 0;  
                 }
             }
             
