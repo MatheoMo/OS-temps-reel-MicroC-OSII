@@ -9,20 +9,23 @@ void Read_SW(void* pdata);
 
 // variavles partagées
 INT8U sw_value = 0;
+INT8U key_value = 0;
 
-void Read_SW(void* pdata){
+void Read_Key(void* pdata){
     while (1)
     {
-        INT8U sw_value = IORD_ALTERA_AVALON_PIO_DATA(SW_BASE);
+        INT8U key_value = IORD_ALTERA_AVALON_PIO_DATA(KEY_BASE);
         OSTimeDlyHMSM(0, 0, 0, 500);
     }
 }
 int main(void){
     printf("Voulez-vous commencer une nouvelle partie ? ");
-    if(sw_value & 0x01){
+    if(key_value == 1){
         printf("Nouvelle partie commencée!\n");
-    } else {
+    } else if (key_value == 2)
+    {
         printf("Continuer la partie en cours.\n");
     }
+
     return 0;
 }
