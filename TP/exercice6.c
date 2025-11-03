@@ -5,6 +5,10 @@
 #include "altera_avalon_timer_regs.h"
 #include "altera_avalon_pio_regs.h"
 
+/* Definition of Task Stacks */
+#define   TASK_STACKSIZE       2048
+OS_STK    task_key_stk[TASK_STACKSIZE];
+
 void Read_SW(void* pdata);
 
 // variavles partagées
@@ -15,10 +19,21 @@ void Read_Key(void* pdata){
     while (1)
     {
         INT8U key_value = IORD_ALTERA_AVALON_PIO_DATA(KEY_BASE);
-        OSTimeDlyHMSM(0, 0, 0, 500);
+        OSTimeDlyHMSM(0, 0, 0, 100);
     }
 }
 int main(void){
+    OSInit();
+    OSTaskCreateExt(Read_Key,
+                    NULL,
+                    (void *)&task_key_stk[TASK_STACKSIZE-1],
+                    2,
+                    2,
+                    task_key_stk,
+                    TASK_STACKSIZE,
+                    NULL,
+                    0);
+    
     printf("Voulez-vous commencer une nouvelle partie ? ");
     if(key_value == 1){
         printf("Nouvelle partie commencée!\n");
@@ -26,6 +41,6 @@ int main(void){
     {
         printf("Continuer la partie en cours.\n");
     }
-
+    OSStart();
     return 0;
 }
