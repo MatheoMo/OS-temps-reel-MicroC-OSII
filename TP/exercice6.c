@@ -15,18 +15,32 @@ OS_STK    task_game_stk[TASK_STACKSIZE];
 
 
 void Read_SW(void* pdata);
-void startGame(void);
+void startGame(void* pdata);
 
 // variavles partagées
 INT8U sw_value = 0;
 INT8U key_value = 0;
 
-void startGame(void){
-    if(sw_value == 1){
-        printf("Nouvelle partie commencée!\n");
-    } else if (sw_value == 2)
+void startGame(void* pdata){
+    INT8U last_key = 0;
+    
+    while (1)
     {
-        printf("Continuer la partie en cours.\n");
+        if (key_value != last_key && key_value != 3)
+        {
+            if (key_value == 1)
+            {
+                printf("Nouvelle partie commencée!\n");
+            }
+            else if (key_value == 2)
+            {
+                printf("Continuer la partie en cours.\n");
+            }
+            
+            last_key = key_value;
+        }
+        
+        OSTimeDlyHMSM(0, 0, 0, 100);
     }
 }
 
