@@ -71,8 +71,7 @@ void Temp_Alarm(void* pdata) {
 int main(void){
 	while (1)
 	{
-		Temp_Alarm(NULL);
-		OSTimeDlyHMSM(0, 0, 1, 0); // Delay of 1 second
+		read_temperature(NULL);
 	}
 	
 	return 0;
